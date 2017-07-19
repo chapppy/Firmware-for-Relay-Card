@@ -21,11 +21,11 @@ sPinConfig pinsConfig[PIN_COUNT] =
   {PIN_IO5, GPIOB, GPIO_PIN_4, "Relay5"},
   {PIN_IO6, GPIOB, GPIO_PIN_5, "Relay6"},
   {PIN_IO7, GPIOB, GPIO_PIN_6, "Relay7"},
-  {PIN_IO8, GPIOB, GPIO_PIN_7, "Relay8"},
+  /*{PIN_IO8, GPIOB, GPIO_PIN_7, "Relay8"},
   {PIN_IO9, GPIOB, GPIO_PIN_8, "Relay9"},
   {PIN_IO10, GPIOB, GPIO_PIN_9, "Relay10"},
   {PIN_IO11, GPIOA, GPIO_PIN_9, "Relay11"},
-  {PIN_IO12, GPIOA, GPIO_PIN_10, "Relay12"}
+  {PIN_IO12, GPIOA, GPIO_PIN_10, "Relay12"}*/
 };
 
 
@@ -160,7 +160,7 @@ void reportBin()
  }
 
  string += "Channels state 0x";
- string.addInt8_t((uint8_t)output, 16);
+ string.addUint8_t((uint8_t)output, 16);
  string += "\r";
 
 

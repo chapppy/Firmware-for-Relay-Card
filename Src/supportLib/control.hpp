@@ -35,11 +35,11 @@ typedef enum {
   PIN_IO5 = 5,
   PIN_IO6 = 6,
   PIN_IO7 = 7,
-  PIN_IO8 = 8,
+  /*PIN_IO8 = 8,
   PIN_IO9 = 9,
   PIN_IO10 = 11,
   PIN_IO11 = 12,
-  PIN_IO12 = 13,
+  PIN_IO12 = 13,*/
   PIN_COUNT
 }ePins;
 
