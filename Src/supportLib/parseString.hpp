@@ -1,16 +1,26 @@
+/*
+IOController-FW - the firmware for STM32 microcontrollers which allows controls IO(GPIO) via USB 
+Copyright (C) 2017 Stepan Hamouz, s.hamouz@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef PARSESTRING_HPP
 #define PARSESTRING_HPP
 
 #include "stdint.h"
-
-//#include <iostream>
-
 #include "str2num.hpp"
-
-//#include "num2str.hpp" //dela problem kdyz je vlozeny primo do headru proc???
-
-
-
 
 
 template<uint16_t SIZE>
@@ -40,20 +50,12 @@ class parseString
     char temp[16];
     char *source;
     uint16_t nSource;
-    uint16_t nSourceBackup; // protoze odecita z extractStr!!!!
+    uint16_t nSourceBackup;
     char *current;
     uint8_t stateLastConvers;
 
     char isOneOf(const char currentChar, const char *possibleChar, uint8_t size);
 };
-
-/*
-template<uint16_t SIZE>
-char parseString<SIZE>::getNextLetter(void)
-{
-  
-}
-*/
 
 template<uint16_t SIZE>
 uint8_t parseString<SIZE>::getStr(char *outString, uint8_t outSize, const char start, const char end)  //TODO OUTSIZE se muzi pouzit, jinak muze pretect vystupni buffer
@@ -92,14 +94,14 @@ int32_t parseString<SIZE>::extractStr(char *dest, const char start, const char e
 {
     uint8_t loc_prog = 0;
     uint8_t loc_leng = 0;
-    uint8_t loc_skipedLetters = 0; // pocet znaku, ktery se muselo preskocit nez se nasel start
+    uint8_t loc_skipedLetters = 0;
     
     if(start == 0)
     {
       loc_prog = 1;
     }
     
-	  while ((nSource > 0) && (*current != 0))  // (*s1 != *s2) && (
+      while ((nSource > 0) && (*current != 0))
     {
       nSource--;
       if(*current == start)
@@ -113,14 +115,13 @@ int32_t parseString<SIZE>::extractStr(char *dest, const char start, const char e
         if(loc_prog == 1)
         {
           *dest = 0; 
-          nSource++; // posledni se nepocita, pocita se na zacatek dalsi
-          *current++;   //??? 
+          nSource++; 
+          *current++; 
           return loc_leng;  
         }
         else
         {
           loc_skipedLetters++;
-          //return 0;
         }
       }
       else
@@ -139,8 +140,8 @@ int32_t parseString<SIZE>::extractStr(char *dest, const char start, const char e
       *current++;
     }
     
-  *dest = 0; // ukoncit retezec nulou 
-	return 0;//(*(unsigned char *)s1 - *(unsigned char *)--s2);
+  *dest = 0; 
+    return 0;
 }
 
 template<uint16_t SIZE>
@@ -177,18 +178,18 @@ char parseString<SIZE>::findNext(const char *end, uint8_t size)
     loc_s1++;
   }
   
-	return returnVal;
+    return returnVal;
 }
 
 
-             // co se hleda     // max velikost v cem
+
 template<uint16_t SIZE>
 int32_t parseString<SIZE>::strcmpAndShift(const char *s1, uint16_t arg_size)
 {
   const char *loc_s1 = s1;
   char *loc_s2 = current;
      
-	while (arg_size > 0)  // (*s1 != *s2) && (
+    while (arg_size > 0)
   {
     arg_size--;
     if(*s1 == *loc_s2)
@@ -208,7 +209,7 @@ int32_t parseString<SIZE>::strcmpAndShift(const char *s1, uint16_t arg_size)
       
     *loc_s2++;
   }
-	return 0;//(*(unsigned char *)s1 - *(unsigned char *)--s2);
+    return 0;
 }
 
 template<uint16_t SIZE>

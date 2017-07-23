@@ -1,7 +1,23 @@
+/*
+IOController-FW - the firmware for STM32 microcontrollers which allows controls IO(GPIO) via USB 
+Copyright (C) 2017 Stepan Hamouz, s.hamouz@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "control.hpp"
 #include "usbd_cdc_if.h"
-//#include "str2num.hpp"
 #include "cString.hpp"
 #include "parseString.hpp"
 #include "usbd_cdc_if.h"
@@ -21,11 +37,6 @@ sPinConfig pinsConfig[PIN_COUNT] =
   {PIN_IO5, GPIOB, GPIO_PIN_4, "Relay5"},
   {PIN_IO6, GPIOB, GPIO_PIN_5, "Relay6"},
   {PIN_IO7, GPIOB, GPIO_PIN_6, "Relay7"},
-  /*{PIN_IO8, GPIOB, GPIO_PIN_7, "Relay8"},
-  {PIN_IO9, GPIOB, GPIO_PIN_8, "Relay9"},
-  {PIN_IO10, GPIOB, GPIO_PIN_9, "Relay10"},
-  {PIN_IO11, GPIOA, GPIO_PIN_9, "Relay11"},
-  {PIN_IO12, GPIOA, GPIO_PIN_10, "Relay12"}*/
 };
 
 
@@ -57,18 +68,18 @@ uint8_t controllPin(uint8_t arg_id, uint8_t arg_state)
   {
     if(arg_state == 1)
     {
-	  HAL_GPIO_WritePin(pinsConfig[arg_id].GPIOx , pinsConfig[arg_id].GPIO_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(pinsConfig[arg_id].GPIOx , pinsConfig[arg_id].GPIO_Pin, GPIO_PIN_SET);
       string += "Channel ";
-	  string.addInt8_t((uint8_t)pinsConfig[arg_id].pinID, 10);
-	  //string += pinsConfig[arg_id].name;
+      string.addInt8_t((uint8_t)pinsConfig[arg_id].pinID, 10);
+      //string += pinsConfig[arg_id].name;
       string += " is now enabled\r";
     }
     else
     {
-	  HAL_GPIO_WritePin(pinsConfig[arg_id].GPIOx , pinsConfig[arg_id].GPIO_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(pinsConfig[arg_id].GPIOx , pinsConfig[arg_id].GPIO_Pin, GPIO_PIN_RESET);
       string += "Channel ";
-	  string.addInt8_t((uint8_t)pinsConfig[arg_id].pinID, 10);
-	  //string += pinsConfig[arg_id].name;
+      string.addInt8_t((uint8_t)pinsConfig[arg_id].pinID, 10);
+      //string += pinsConfig[arg_id].name;
       string += " is now disabled\r";
     }
   }
@@ -93,48 +104,48 @@ void reportPins(uint8_t arg_id)
   if(arg_id == 0xff)
   {
 
-	 for(uint8_t i=0; i<PIN_COUNT; i++)
-	 {
-		 pinState = HAL_GPIO_ReadPin(pinsConfig[i].GPIOx , pinsConfig[i].GPIO_Pin);
-		 if(pinState == GPIO_PIN_SET)
-		 {
-			 if(isFirst == 0)
-			 {
-			   string += ", ";
-			 }
-			 else
-			 {
-			   string += "Enabled channels ";
-			   isFirst = 0;
-			 }
-			 string.addInt8_t((uint8_t)pinsConfig[i].pinID, 10);
-		 }
-	 }
+     for(uint8_t i=0; i<PIN_COUNT; i++)
+     {
+         pinState = HAL_GPIO_ReadPin(pinsConfig[i].GPIOx , pinsConfig[i].GPIO_Pin);
+         if(pinState == GPIO_PIN_SET)
+         {
+             if(isFirst == 0)
+             {
+               string += ", ";
+             }
+             else
+             {
+               string += "Enabled channels ";
+               isFirst = 0;
+             }
+             string.addInt8_t((uint8_t)pinsConfig[i].pinID, 10);
+         }
+     }
 
-	 if(string.getSize() == 0)
-	 {
-		string += "all channels disabled";
-	 }
-	 string += "\r";
+     if(string.getSize() == 0)
+     {
+        string += "all channels disabled";
+     }
+     string += "\r";
   }
   else
   {
-	if(arg_id < PIN_COUNT)
-	{
-	  pinState = HAL_GPIO_ReadPin(pinsConfig[arg_id < PIN_COUNT].GPIOx , pinsConfig[arg_id < PIN_COUNT].GPIO_Pin);
-	  if(pinState == GPIO_PIN_SET)
-	  {
-		string += "Channel ";
-		string.addInt8_t((uint8_t)arg_id, 10);
-		string += " is enabled\r";
-	  }
-	  else
-	  {
-	    string += "Channel ";
-		string.addInt8_t((uint8_t)arg_id, 10);
-		string += " is disabled\r";
-	  }
-	}
+    if(arg_id < PIN_COUNT)
+    {
+      pinState = HAL_GPIO_ReadPin(pinsConfig[arg_id < PIN_COUNT].GPIOx , pinsConfig[arg_id < PIN_COUNT].GPIO_Pin);
+      if(pinState == GPIO_PIN_SET)
+      {
+        string += "Channel ";
+        string.addInt8_t((uint8_t)arg_id, 10);
+        string += " is enabled\r";
+      }
+      else
+      {
+        string += "Channel ";
+        string.addInt8_t((uint8_t)arg_id, 10);
+        string += " is disabled\r";
+      }
+    }
   }
 
   CDC_Transmit_FS(buffer, string.getSize());
@@ -155,7 +166,7 @@ void reportBin()
    pinState = HAL_GPIO_ReadPin(pinsConfig[i].GPIOx , pinsConfig[i].GPIO_Pin);
    if(pinState == GPIO_PIN_SET)
    {
-	 output |= 1 << i;
+     output |= 1 << i;
    }
  }
 
@@ -179,7 +190,7 @@ void controlCyclic(void)
   stringEx.Init((char*)dataBuff, 64);
 
   do
-	{
+    {
     osEvent evt = osMessageGet(cdcDataHandle, osWaitForever);
     if (evt.status == osEventMessage)
     {
@@ -194,20 +205,20 @@ void controlCyclic(void)
   {
     do
     {
-	  tempChar = stringEx.findNext((const char[2]){',', '\r'}, 2);
-	  tempNumber = stringEx.getUint(' ', tempChar);
-	  controllPin(tempNumber, 1);
-	}while(tempChar != '\r');
+      tempChar = stringEx.findNext((const char[2]){',', '\r'}, 2);
+      tempNumber = stringEx.getUint(' ', tempChar);
+      controllPin(tempNumber, 1);
+    }while(tempChar != '\r');
   }
 
   if(stringEx.strcmpAndShift("Disable ", strlen("Disable ")) == 1)
   {
-	do
-	{
-	  tempChar = stringEx.findNext((const char[2]){',', '\r'}, 2);
-	  tempNumber = stringEx.getUint(' ', tempChar);
-	  controllPin(tempNumber, 0);
-	}while(tempChar != '\r');
+    do
+    {
+      tempChar = stringEx.findNext((const char[2]){',', '\r'}, 2);
+      tempNumber = stringEx.getUint(' ', tempChar);
+      controllPin(tempNumber, 0);
+    }while(tempChar != '\r');
   }
 
   if(stringEx.strcmpAndShift("Enable 0x", strlen("Enable 0x")) == 1)
@@ -232,76 +243,76 @@ void controlCyclic(void)
 
   if(stringEx.strcmpAndShift("Configure", strlen("Configure")) == 1)
   {
-	ePinMode mode = MODE_COUNT;
-	ePinPush push = PUSH_COUNT;
-	uint8_t pinID = 0;
-	uint8_t paramNumber = 0;
+    ePinMode mode = MODE_COUNT;
+    ePinPush push = PUSH_COUNT;
+    uint8_t pinID = 0;
+    uint8_t paramNumber = 0;
 
     do
     {
       tempChar = stringEx.findNext((const char[2]){',', '\r'}, 2);
 
-	  switch(paramNumber)
-	  {
-	    case 0:
-	      pinID = stringEx.getUint(' ', tempChar);
-		  break;
+      switch(paramNumber)
+      {
+        case 0:
+          pinID = stringEx.getUint(' ', tempChar);
+          break;
 
-		case 1:
-		   stringEx.getStr((char*)tempBuff, 8, ' ', tempChar);
+        case 1:
+           stringEx.getStr((char*)tempBuff, 8, ' ', tempChar);
 
-		   if(strcmp((char*)tempBuff, "IN") == 0)
-		   {
-			  mode = (ePinMode)MODE_IN;
+           if(strcmp((char*)tempBuff, "IN") == 0)
+           {
+              mode = (ePinMode)MODE_IN;
            }
-		   else if(strcmp((char*)tempBuff, "OUTPP") == 0)
-	       {
-		      mode = (ePinMode)MODE_OUT_PP;
-			 }
-			 else if(strcmp((char*)tempBuff, "OUTOD") == 0)
-			 {
-				mode = (ePinMode)MODE_OUT_OD;
-			 }
-			 break;
+           else if(strcmp((char*)tempBuff, "OUTPP") == 0)
+           {
+              mode = (ePinMode)MODE_OUT_PP;
+             }
+             else if(strcmp((char*)tempBuff, "OUTOD") == 0)
+             {
+                mode = (ePinMode)MODE_OUT_OD;
+             }
+             break;
 
-		   case 2:
-			 stringEx.getStr((char*)tempBuff, 8, ' ', tempChar);
+           case 2:
+             stringEx.getStr((char*)tempBuff, 8, ' ', tempChar);
 
-			 if(strcmp((char*)tempBuff, "PPNO") == 0)
-			 {
-				push = (ePinPush)PP_NO;
-			 }
-			 else if(strcmp((char*)tempBuff, "PPUP") == 0)
-			 {
-				push = (ePinPush)PP_UP;
-			 }
-			 else if(strcmp((char*)tempBuff, "PPDOWN") == 0)
-			 {
-				push = (ePinPush)PP_DOWN;
-			 }
+             if(strcmp((char*)tempBuff, "PPNO") == 0)
+             {
+                push = (ePinPush)PP_NO;
+             }
+             else if(strcmp((char*)tempBuff, "PPUP") == 0)
+             {
+                push = (ePinPush)PP_UP;
+             }
+             else if(strcmp((char*)tempBuff, "PPDOWN") == 0)
+             {
+                push = (ePinPush)PP_DOWN;
+             }
 
-			 break;
+             break;
 
-		   default:
-			 break;
+           default:
+             break;
 
-		 }
+         }
 
-		 if((mode < MODE_COUNT) and (push < PUSH_COUNT))
-		 {
-	        configurePin(pinID, mode, push);
-		 }
+         if((mode < MODE_COUNT) and (push < PUSH_COUNT))
+         {
+            configurePin(pinID, mode, push);
+         }
 
-		 paramNumber++;
-	   }while(tempChar != '\r');
+         paramNumber++;
+       }while(tempChar != '\r');
 
 
 
-	}
+    }
 
   if(stringEx.strcmpAndShift("Info\r", strlen("Info\r")) == 1)
   {
-	CDC_Transmit_FS((uint8_t*)"s.hamouz@gmail.com\r", strlen("s.hamouz@gmail.com\r"));
+    CDC_Transmit_FS((uint8_t*)"s.hamouz@gmail.com\r", strlen("s.hamouz@gmail.com\r"));
   }
 
 

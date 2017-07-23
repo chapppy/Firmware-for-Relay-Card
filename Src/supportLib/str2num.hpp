@@ -1,3 +1,21 @@
+/*
+IOController-FW - the firmware for STM32 microcontrollers which allows controls IO(GPIO) via USB 
+Copyright (C) 2017 Stepan Hamouz, s.hamouz@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef STR2NUM_HPP
 #define STR2NUM_HPP
 
@@ -37,9 +55,9 @@ float str2numBase <T>::str2float(char *a, uint16_t len)
     
     for(i;i<len;i++)
     {   
-      if(exponent > 0)   // TODO mozno lepsi pricitat plus jedna promena navic
+      if(exponent > 0)
       {
-    	  exponent++;
+          exponent++;
       }
       if((a[i] >= '0') && (a[i] <= '9'))
       {
@@ -95,7 +113,6 @@ uint8_t str2numBase <T>::str2uintEx(uint32_t *retValue, char *a, uint16_t len, u
     {
       return 0;
     }
-     //val += (a[i]-55)*(1<<(4*(len-1-i)));
      val = val*soust + addVal;
   }
 
@@ -128,21 +145,6 @@ int32_t str2numBase <T>::str2int(char *a, uint16_t len, uint8_t soust)
   }
   
   return ret;
-  
-  
-  /*int32_t ret = 0;
-  
-  if(a[0] == '-')
-  {
-    ret = str2uint(&a[1], len-1, soust);
-    ret *= -1;
-  }
-  else
-  {
-    ret = str2uint(a, len, soust);
-  }
-  
-  return ret;*/
 }
 
 template <class T>
@@ -181,13 +183,9 @@ class str2num : public str2numBase<T>
 };
 
 
-// Explicitly specialize for the member function
 template <>  // int32_t
 int32_t str2num<int32_t>::getNum(char *str, uint8_t size, uint8_t radix){
   return str2int(str, size, radix);
-  /*int32_t val;
-  lastStatus = str2intEx(&val, str, size, radix);
-  return val;*/
 }
 
 template <>  // int32_t
@@ -195,14 +193,9 @@ uint8_t str2num<int32_t>::getNumEx(int32_t *retValue, char *str, uint8_t size, u
   return str2intEx(retValue, str, size, radix);
 }
 
-//
-// Explicitly specialize for the member function
 template <>  // int16_t
 int16_t str2num<int16_t>::getNum(char *str, uint8_t size, uint8_t radix){
   return str2int(str, size, radix);
-  /*int32_t val;
-  lastStatus = str2intEx(&val, str, size, radix);
-  return static_cast<uint16_t>(val);*/
 }
 
 template <>  // int16_t
@@ -210,14 +203,9 @@ uint8_t str2num<int16_t>::getNumEx(int16_t *retValue, char *str, uint8_t size, u
   return str2intEx(reinterpret_cast<int32_t*>(retValue), str, size, radix);
 }
 
-//
-// Explicitly specialize for the member function
 template <> // int8_t
 int8_t str2num<int8_t>::getNum(char *str, uint8_t size, uint8_t radix){
   return str2int(str, size, radix);
-  /*int32_t val;
-  lastStatus = str2intEx(&val, str, size, radix);
-  return static_cast<uint8_t>(val);*/
 }
 
 template <>  // int8_t
@@ -226,15 +214,9 @@ uint8_t str2num<int8_t>::getNumEx(int8_t *retValue, char *str, uint8_t size, uin
 }
 
 
-
-//
-// Explicitly specialize for the member function
 template <> // uint32_t
 uint32_t str2num<uint32_t>::getNum(char *str, uint8_t size, uint8_t radix){
   return str2uint(str, size, radix); 
-  /*uint32_t val;
-  lastStatus = str2uintEx(&val, str, size, radix);
-  return val; */ 
 }
 
 template <> // uint32_t
@@ -242,14 +224,9 @@ uint8_t str2num<uint32_t>::getNumEx(uint32_t *retValue, char *str, uint8_t size,
   return str2uintEx(retValue, str, size, radix); 
 }
 
-//
-// Explicitly specialize for the member function
 template <> // uint16_t
 uint16_t str2num<uint16_t>::getNum(char *str, uint8_t size, uint8_t radix){
   return str2uint(str, size, radix);
-  /*uint32_t val;
-  lastStatus = str2uintEx(&val, str, size, radix);
-  return static_cast<uint16_t>(val);*/
 }
 
 template <> // uint16_t
@@ -257,14 +234,10 @@ uint8_t str2num<uint16_t>::getNumEx(uint16_t *retValue, char *str, uint8_t size,
   return str2uintEx(reinterpret_cast<uint32_t*>(retValue), str, size, radix); 
 }
 
-//
-// Explicitly specialize for the member function
 template <> // uint8_t
 uint8_t str2num<uint8_t>::getNum(char *str, uint8_t size, uint8_t radix){
   return str2uint(str, size, radix);
-  /*uint32_t val;
-  lastStatus = str2uintEx(&val, str, size, radix);
-  return static_cast<uint8_t>(val);  */
+
 }
 
 template <> // uint8_t
@@ -273,9 +246,6 @@ uint8_t str2num<uint8_t>::getNumEx(uint8_t *retValue, char *str, uint8_t size, u
 }
 
 
-
-
-// Explicitly specialize for the member function
 template <> // float
 float str2num<float>::getNum(char *str, uint8_t size, uint8_t radix){
   return str2float(str, size);

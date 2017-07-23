@@ -1,9 +1,20 @@
 /*
- * control.hpp
- *
- *  Created on: 5. 4. 2017
- *      Author: uzivatel
- */
+IOController-FW - the firmware for STM32 microcontrollers which allows controls IO(GPIO) via USB 
+Copyright (C) 2017 Stepan Hamouz, s.hamouz@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #ifndef SUPPORTLIB_CONTROL_HPP_
 #define SUPPORTLIB_CONTROL_HPP_
@@ -35,11 +46,6 @@ typedef enum {
   PIN_IO5 = 5,
   PIN_IO6 = 6,
   PIN_IO7 = 7,
-  /*PIN_IO8 = 8,
-  PIN_IO9 = 9,
-  PIN_IO10 = 11,
-  PIN_IO11 = 12,
-  PIN_IO12 = 13,*/
   PIN_COUNT
 }ePins;
 

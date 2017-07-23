@@ -324,11 +324,9 @@ void StartDefaultTask(void const * argument)
 
   for(;;)
   {
-	 controlCyclic();
-     osDelay(10);
-
+    controlCyclic();
+    osDelay(10);
   }
-
 
   /* USER CODE END 5 */ 
 }
@@ -341,9 +339,9 @@ void StartLedToggleTask(void const * argument)
   for(;;)
   {
     osDelay(450);
-	HAL_GPIO_WritePin(GPIOC , GPIO_PIN_9, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOC , GPIO_PIN_9, GPIO_PIN_SET);
     osDelay(50);
-	HAL_GPIO_WritePin(GPIOC , GPIO_PIN_9, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC , GPIO_PIN_9, GPIO_PIN_RESET);
   }
   /* USER CODE END StartLedToggleTask */
 }

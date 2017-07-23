@@ -1,5 +1,5 @@
-#  General description
-bla bla bla lba
+#  IO controller
+This project allows to control GPIO of STM32 microntroller with simple comands send via USB (Virtual Com Port). The project is developed on STM32F072RBT6 microcontroller. The SMT32 library is configured by [STM32Cube Embedded Software ](http://www.st.com/en/embedded-software/stm32cube-embedded-software.html "STM32Cube Embedded Software ") whitch ensure simple portability to another STM32 microcontrollers. The functionality was tested on [32F072BDISCOVERY](http://www.st.com/en/evaluation-tools/32f072bdiscovery.html "32F072BDISCOVERY"). This project can be used for switch of external tranzistors, LEDs, relays or reading of logical signal on GPIO of microcontroller. You can see the example of use in demo application (GUI in QT for control of relays  **LINK**)
 
 # PINout
 | STM32  pin  | Symbolic name  | Init state |
@@ -14,17 +14,17 @@ bla bla bla lba
 | PB6 | 7 | IN, no pullup |
 
 # Command set
-The command is passed via emulated serial interface (visible as COMx in Windows). The port has description “STMicroelectronics Virtual COM”. The baud rate is autodetected by STM kit. Recommended is 9600.
+The command is passed via emulated serial interface (visible as COMx in Windows). The port has description “STMicroelectronics Virtual COM”. The baud rate is autodetected by STM32 microcontroller. Recommended is 9600.
 
 ## Enable pin
-It set pin to logical 1
+It sets pin to logical 1
 Command: `Enable x[, n]\r`
 x stands for symbolic name of pin.
 
 example: `Enable 1, 2\r`  Sets  PC7 and PC8 to logical 1
 
 ## Disable pin
-It set pin to logical 0
+It sets pin to logical 0
 Command: `Disable x[, n]\r`
 x stands for symbolic name of pin.
 
@@ -37,7 +37,7 @@ Response: `Channels state 0xZZ`
 Where 0xZZ is hex value with binary encoded state of all pins. Bit0 = symbolic name 0
 
 Example of response: `Channels state 0xf9`
-PC7, PC8 is enabled. All others are disabled.
+1111 1001b means that PC7, PC8 is enabled. All others are disabled.
 
 ## Get state of pins
 It returns state of all pins. 
@@ -49,7 +49,7 @@ Example of output: `Enabled channels 1, 2\r`
 PC7, PC8 is enabled. All others are disabled.
 
 ## Change configuration of PIN
-Change configuration of single pin.
+It change configuration of single pin.
 Command: `Configure x, MOD0, MOD1\r`
 x stand for symbolic name of pin. MODx see in tables below. 
 
@@ -72,5 +72,5 @@ x stand for symbolic name of pin. MODx see in tables below.
 Example: `Configure 3, OUTPP, PPDOWN\r`
 Set PA5 as output pin with push-pull, the state is active pull-down
 Example: `Configure 3, IN, PPNO\r`
-Set PA5 as input, either of push-up/down is not active
+Set PA5 as input, any of push-up/down is not active
 

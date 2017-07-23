@@ -1,6 +1,23 @@
+/*
+IOController-FW - the firmware for STM32 microcontrollers which allows controls IO(GPIO) via USB 
+Copyright (C) 2017 Stepan Hamouz, s.hamouz@gmail.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef NUM2STR_HPP
 #define NUM2STR_HPP
-
 
 #include "stdint.h"
 #include "math.h"
@@ -20,8 +37,6 @@ class num2strBase
 };
 
 
-// Yet, another good itoa implementation
-// returns: the length of the number string
 template <class T>
 uint8_t num2strBase<T>::itoa(T argValue, char *sp, uint8_t radix)
 {
@@ -45,7 +60,7 @@ uint8_t num2strBase<T>::itoa(T argValue, char *sp, uint8_t radix)
     while (value || tp == tmp)
     {
       i = value % radix;
-      value /= radix; // v/=radix uses less CPU clocks than v=v/radix does
+      value /= radix;
       if (i < 10)
       {
         *tp++ = i+'0';
@@ -172,29 +187,5 @@ template <>
 uint8_t num2str<float>::getStr(float number, char *str, uint8_t radix){
   return ftoa((float)number, str, radix);  //!H! ftoa does not return strlen!!!
 }
-
-
-
-
-/*
-template<>
-class num2str<int32_t> : public num2strBase<int32_t>
-{
-    public:
-      static void getStr(int32_t number, char *str, uint8_t radix);
-
-    protected:
-
-
-    private:
-
-};
-
-
-void num2str<int32_t>::getStr(int32_t number, char *str, uint8_t radix)
-{
-   //itoa(number, str, radix);
-}*/
-
 
 #endif
