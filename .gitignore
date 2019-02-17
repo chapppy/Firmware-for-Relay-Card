@@ -34,4 +34,7 @@
 *.bak
 
 #
-Debug/
+Debug/Drivers
+Debug/Middlewares
+Debug/Src
+Debug/startup

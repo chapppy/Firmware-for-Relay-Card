@@ -1,10 +1,16 @@
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * File Name          : main.c
-  * Description        : Main program body
+  * @file           : main.c
+  * @brief          : Main program body
   ******************************************************************************
+  ** This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -30,61 +36,91 @@
   *
   ******************************************************************************
   */
+/* USER CODE END Header */
+
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f0xx_hal.h"
+#include "main.h"
 #include "cmsis_os.h"
 #include "usb_device.h"
 
+
+
+
+/* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "usbd_cdc_if.h"
 #include "control.hpp"
 /* USER CODE END Includes */
 
-/* Private variables ---------------------------------------------------------*/
-osThreadId uartTaskHandle;
-osThreadId ledToggleTaskHandle;
-osMessageQId cdcDataHandle;
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
 
-/* USER CODE BEGIN PV */
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan;
+
+osThreadId ledToggleTaskHandle;
+osThreadId uartTaskHandle;
+osMessageQId cdcDataHandle;
+/* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void Error_Handler(void);
 static void MX_GPIO_Init(void);
-void StartDefaultTask(void const * argument);
-void StartLedToggleTask(void const * argument);
+static void MX_CAN_Init(void);
+void ledToggleTaskFunc(void const * argument);
+void uartTaskFunc(void const * argument);
 
 /* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
 
 /* USER CODE END PFP */
 
+/* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 
 /* USER CODE END 0 */
 
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
 
-  /* MCU Configuration---------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
   /* Configure the system clock */
   SystemClock_Config();
 
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-
+  MX_CAN_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -102,13 +138,13 @@ int main(void)
   /* USER CODE END RTOS_TIMERS */
 
   /* Create the thread(s) */
-  /* definition and creation of uartTask */
-  osThreadDef(uartTask, StartDefaultTask, osPriorityNormal, 0, 128);
-  uartTaskHandle = osThreadCreate(osThread(uartTask), NULL);
-
   /* definition and creation of ledToggleTask */
-  osThreadDef(ledToggleTask, StartLedToggleTask, osPriorityNormal, 0, 128);
+  osThreadDef(ledToggleTask, ledToggleTaskFunc, osPriorityBelowNormal, 0, 128);
   ledToggleTaskHandle = osThreadCreate(osThread(ledToggleTask), NULL);
+
+  /* definition and creation of uartTask */
+  osThreadDef(uartTask, uartTaskFunc, osPriorityNormal, 0, 128);
+  uartTaskHandle = osThreadCreate(osThread(uartTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -133,217 +169,192 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-  /* USER CODE BEGIN 3 */
-
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-
 }
 
-/** System Clock Configuration
-*/
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  RCC_OscInitTypeDef RCC_OscInitStruct;
-  RCC_ClkInitTypeDef RCC_ClkInitStruct;
-  RCC_PeriphCLKInitTypeDef PeriphClkInit;
-
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI48;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  /**Initializes the CPU, AHB and APB busses clocks 
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
-  RCC_OscInitStruct.HSICalibrationValue = 16;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
-  RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV1;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
-
+  /**Initializes the CPU, AHB and APB busses clocks 
+  */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI48;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
-
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
   PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
+
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
-
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
-
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
-
-  /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 3, 0);
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
-     PA2   ------> TSC_G1_IO3
-     PA3   ------> TSC_G1_IO4
-     PA6   ------> TSC_G2_IO3
-     PA7   ------> TSC_G2_IO4
-     PB0   ------> TSC_G3_IO2
-     PB1   ------> TSC_G3_IO3
-     PB10   ------> I2C2_SCL
-     PB11   ------> I2C2_SDA
-     PB13   ------> SPI2_SCK
-     PB14   ------> SPI2_MISO
-     PB15   ------> SPI2_MOSI
-*/
+/**
+  * @brief CAN Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CAN_Init(void)
+{
+
+  /* USER CODE BEGIN CAN_Init 0 */
+
+  /* USER CODE END CAN_Init 0 */
+
+  /* USER CODE BEGIN CAN_Init 1 */
+
+  /* USER CODE END CAN_Init 1 */
+  hcan.Instance = CAN;
+  hcan.Init.Prescaler = 16;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SJW = CAN_SJW_1TQ;
+  hcan.Init.BS1 = CAN_BS1_1TQ;
+  hcan.Init.BS2 = CAN_BS2_1TQ;
+  hcan.Init.TTCM = DISABLE;
+  hcan.Init.ABOM = DISABLE;
+  hcan.Init.AWUM = DISABLE;
+  hcan.Init.NART = DISABLE;
+  hcan.Init.RFLM = DISABLE;
+  hcan.Init.TXFP = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN_Init 2 */
+
+  /* USER CODE END CAN_Init 2 */
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
 static void MX_GPIO_Init(void)
 {
-	  GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-	  /* GPIO Ports Clock Enable */
-	  __HAL_RCC_GPIOC_CLK_ENABLE();
-	  __HAL_RCC_GPIOA_CLK_ENABLE();
-	  __HAL_RCC_GPIOB_CLK_ENABLE();
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
-	  /*Configure GPIO pin Output Level */
-	  HAL_GPIO_WritePin(GPIOC, NCS_MEMS_SPI_Pin|EXT_RESET_Pin|LD3_Pin|LD6_Pin
-	                          |LD4_Pin|LD5_Pin, GPIO_PIN_RESET);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, IO_RELAY_0_1_Pin|IO_RELAY_0_2_Pin|IO_RELAY_0_3_Pin|IO_RELAY_0_4_Pin 
+                          |IO_RELAY_0_5_Pin|IO_RELAY_0_6_Pin|IO_RELAY_0_7_Pin|IO_RELAY_1_7_Pin, GPIO_PIN_RESET);
 
-	  /*Configure GPIO pin Output Level */
-	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|GPIO_PIN_5, GPIO_PIN_RESET);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, IO_RELAY_1_6_Pin|IO_RELAY_1_5_Pin|IO_RELAY_1_4_Pin|IO_RELAY_1_3_Pin 
+                          |IO_RELAY_1_2_Pin|IO_RELAY_1_1_Pin|IO_LED_Pin, GPIO_PIN_RESET);
 
-	  /*Configure GPIO pins : NCS_MEMS_SPI_Pin EXT_RESET_Pin LD4_Pin LD5_Pin */
-	  GPIO_InitStruct.Pin = NCS_MEMS_SPI_Pin|EXT_RESET_Pin|LD4_Pin|LD5_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  /*Configure GPIO pins : IO_RELAY_0_1_Pin IO_RELAY_0_2_Pin IO_RELAY_0_3_Pin IO_RELAY_0_4_Pin 
+                           IO_RELAY_0_5_Pin IO_RELAY_0_6_Pin IO_RELAY_0_7_Pin IO_RELAY_1_7_Pin */
+  GPIO_InitStruct.Pin = IO_RELAY_0_1_Pin|IO_RELAY_0_2_Pin|IO_RELAY_0_3_Pin|IO_RELAY_0_4_Pin 
+                          |IO_RELAY_0_5_Pin|IO_RELAY_0_6_Pin|IO_RELAY_0_7_Pin|IO_RELAY_1_7_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	  /*Configure GPIO pins : MEMS_INT1_Pin MEMS_INT2_Pin */
-	  GPIO_InitStruct.Pin = MEMS_INT1_Pin|MEMS_INT2_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  /*Configure GPIO pins : IO_RELAY_1_6_Pin IO_RELAY_1_5_Pin IO_RELAY_1_4_Pin IO_RELAY_1_3_Pin 
+                           IO_RELAY_1_2_Pin IO_RELAY_1_1_Pin IO_LED_Pin */
+  GPIO_InitStruct.Pin = IO_RELAY_1_6_Pin|IO_RELAY_1_5_Pin|IO_RELAY_1_4_Pin|IO_RELAY_1_3_Pin 
+                          |IO_RELAY_1_2_Pin|IO_RELAY_1_1_Pin|IO_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	  /*Configure GPIO pin : B1_Pin */
-	  GPIO_InitStruct.Pin = B1_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pins : PB3 PB4 PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF0_SPI1;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-	  /*Configure GPIO pins : PA2 PA3 PA6 PA7 */
-	  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_6|GPIO_PIN_7;
-	  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  GPIO_InitStruct.Alternate = GPIO_AF3_TSC;
-	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	  /*Configure GPIO pins : PA4 PA5 */
-	  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	  /*Configure GPIO pins : PB0 PB1 */
-	  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
-	  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	  GPIO_InitStruct.Alternate = GPIO_AF3_TSC;
-	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	  /*Configure GPIO pins : PB10 PB11 */
-	  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
-	  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-	  GPIO_InitStruct.Pull = GPIO_PULLUP;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	  GPIO_InitStruct.Alternate = GPIO_AF1_I2C2;
-	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	  /*Configure GPIO pins : PB13 PB14 PB15 */
-	  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
-	  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	  GPIO_InitStruct.Alternate = GPIO_AF0_SPI2;
-	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-	  /*Configure GPIO pins : LD3_Pin LD6_Pin */
-	  GPIO_InitStruct.Pin = LD3_Pin|LD6_Pin;
-	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-
-	  HAL_GPIO_WritePin(GPIOC , LD3_Pin, GPIO_PIN_SET);
-	  HAL_GPIO_WritePin(GPIOC , LD6_Pin, GPIO_PIN_SET);
-
-	  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-
-	  /*Configure GPIO pins : PA8 PA9 PA10 */
-	  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10;
-	  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	  /*Configure GPIO pins : PB3 PB4 PB5 PB6
-	                           PB7 PB8 PB9 */
-	  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
-	                          |GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
-	  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	  GPIO_InitStruct.Pull = GPIO_NOPULL;
-	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 /* USER CODE BEGIN 4 */
 
-
 /* USER CODE END 4 */
 
-/* StartDefaultTask function */
-void StartDefaultTask(void const * argument)
+/* USER CODE BEGIN Header_ledToggleTaskFunc */
+/**
+  * @brief  Function implementing the ledToggleTask thread.
+  * @param  argument: Not used 
+  * @retval None
+  */
+/* USER CODE END Header_ledToggleTaskFunc */
+void ledToggleTaskFunc(void const * argument)
 {
-  /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
-
   /* USER CODE BEGIN 5 */
-
-
-  for(;;)
-  {
-    controlCyclic();
-    osDelay(10);
-  }
-
-  /* USER CODE END 5 */ 
-}
-
-/* StartLedToggleTask function */
-void StartLedToggleTask(void const * argument)
-{
-  /* USER CODE BEGIN StartLedToggleTask */
   /* Infinite loop */
   for(;;)
   {
-    osDelay(450);
-    HAL_GPIO_WritePin(GPIOC , GPIO_PIN_9, GPIO_PIN_SET);
-    osDelay(50);
-    HAL_GPIO_WritePin(GPIOC , GPIO_PIN_9, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_SET); // OFF
+	osDelay(800);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_RESET);  // ON
+	osDelay(50);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_SET);  // OFF
+	osDelay(100);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, GPIO_PIN_RESET); // ON
+	osDelay(50);
+
+
   }
-  /* USER CODE END StartLedToggleTask */
+  /* USER CODE END 5 */ 
+}
+
+/* USER CODE BEGIN Header_uartTaskFunc */
+/**
+* @brief Function implementing the uartTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_uartTaskFunc */
+void uartTaskFunc(void const * argument)
+{
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
+  control controlDrv;
+
+  /* USER CODE BEGIN uartTaskFunc */
+
+  /* Infinite loop */
+  for(;;)
+  {
+	controlDrv.cyclic();
+    osDelay(10);
+  }
+  /* USER CODE END uartTaskFunc */
 }
 
 /**
@@ -356,58 +367,44 @@ void StartLedToggleTask(void const * argument)
   */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-/* USER CODE BEGIN Callback 0 */
+  /* USER CODE BEGIN Callback 0 */
 
-/* USER CODE END Callback 0 */
+  /* USER CODE END Callback 0 */
   if (htim->Instance == TIM1) {
     HAL_IncTick();
   }
-/* USER CODE BEGIN Callback 1 */
+  /* USER CODE BEGIN Callback 1 */
 
-/* USER CODE END Callback 1 */
+  /* USER CODE END Callback 1 */
 }
 
 /**
   * @brief  This function is executed in case of error occurrence.
-  * @param  None
   * @retval None
   */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler */
+  /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  while(1) 
-  {
-  }
-  /* USER CODE END Error_Handler */ 
+
+  /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
-
+#ifdef  USE_FULL_ASSERT
 /**
-   * @brief Reports the name of the source file and the source line number
-   * where the assert_param error has occurred.
-   * @param file: pointer to the source file name
-   * @param line: assert_param error line source number
-   * @retval None
-   */
-void assert_failed(uint8_t* file, uint32_t line)
-{
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(char *file, uint32_t line)
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
-    ex: printf("Wrong parameters value: file %s on line %d\r\r", file, line) */
+     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
-
 }
-
-#endif
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-*/ 
+#endif /* USE_FULL_ASSERT */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

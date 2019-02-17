@@ -23,32 +23,106 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usbd_cdc_if.h"
 
 
-uint32_t sPinModeConv[MODE_COUNT] = { GPIO_MODE_INPUT, GPIO_MODE_OUTPUT_PP, GPIO_MODE_OUTPUT_OD};
-uint32_t sPinPushConv[PUSH_COUNT] = { GPIO_NOPULL, GPIO_PULLUP, GPIO_PULLDOWN};
-
-
-sPinConfig pinsConfig[PIN_COUNT] =
-{
-  {PIN_IO0, GPIOC, GPIO_PIN_6, "Relay0"},
-  {PIN_IO1, GPIOC, GPIO_PIN_7, "Relay1"},
-  {PIN_IO2, GPIOC, GPIO_PIN_8, "Relay2"},
-  {PIN_IO3, GPIOA, GPIO_PIN_8, "Relay3"},
-  {PIN_IO4, GPIOB, GPIO_PIN_3, "Relay4"},
-  {PIN_IO5, GPIOB, GPIO_PIN_4, "Relay5"},
-  {PIN_IO6, GPIOB, GPIO_PIN_5, "Relay6"},
-  {PIN_IO7, GPIOB, GPIO_PIN_6, "Relay7"},
+const char *infoArray[] = {
+  "Relay Card Controller\r",
+  "s.hamouz@gmail.com\r"
 };
 
 
+uint32_t control::pinModeConv[] = { GPIO_MODE_INPUT, GPIO_MODE_OUTPUT_PP, GPIO_MODE_OUTPUT_OD};
+uint32_t control::pinPushConv[] = { GPIO_NOPULL, GPIO_PULLUP, GPIO_PULLDOWN};
+control::sPinConfig control::pinsConfig[] =
+{
+  {PIN_IO0,  GPIOA, IO_RELAY_0_1_Pin,  "Relay0"},
+  {PIN_IO1,  GPIOA, IO_RELAY_0_2_Pin,  "Relay1"},
+  {PIN_IO2,  GPIOA, IO_RELAY_0_3_Pin,  "Relay2"},
+  {PIN_IO3,  GPIOA, IO_RELAY_0_4_Pin,  "Relay3"},
+  {PIN_IO4,  GPIOA, IO_RELAY_0_5_Pin,  "Relay4"},
+  {PIN_IO5,  GPIOA, IO_RELAY_0_6_Pin,  "Relay5"},
+  {PIN_IO6,  GPIOA, IO_RELAY_0_7_Pin,  "Relay6"},
+  {PIN_IO7,  GPIOB, IO_RELAY_1_1_Pin,  "Relay7"},
+  {PIN_IO8,  GPIOB, IO_RELAY_1_2_Pin,  "Relay8"},
+  {PIN_IO9,  GPIOB, IO_RELAY_1_3_Pin,  "Relay9"},
+  {PIN_IO10, GPIOB, IO_RELAY_1_4_Pin, "Relay10"},
+  {PIN_IO11, GPIOB, IO_RELAY_1_5_Pin, "Relay11"},
+  {PIN_IO12, GPIOB, IO_RELAY_1_6_Pin, "Relay12"},
+  {PIN_IO13, GPIOA, IO_RELAY_1_7_Pin, "Relay13"},
+};
 
 
-uint8_t configurePin(uint8_t arg_id, ePinMode arg_mode, ePinPush arg_push)
+control::control(void)
+{
+
+}
+
+uint8_t control::enableRelay(uint8_t relay_id)
+{
+  uint8_t ret;
+
+  if(relay_id < PIN_COUNT)
+  {
+    HAL_GPIO_WritePin(pinsConfig[relay_id].GPIOx , pinsConfig[relay_id].GPIO_Pin, GPIO_PIN_SET);
+    ret = 1;
+  }
+  else
+  {
+	ret = 0;
+  }
+
+  return ret;
+}
+
+uint8_t control::disableRelay(uint8_t relay_id)
+{
+  uint8_t ret = 0;
+
+  if(relay_id < PIN_COUNT)
+  {
+    HAL_GPIO_WritePin(pinsConfig[relay_id].GPIOx , pinsConfig[relay_id].GPIO_Pin, GPIO_PIN_RESET);
+    ret = 1;
+  }
+  else
+  {
+	ret = 0;
+  }
+
+  return ret;
+}
+
+uint8_t control::isRelayEnabled(uint8_t relay_id)
+{
+  GPIO_PinState pinState;
+  uint8_t ret;
+
+  if(relay_id < PIN_COUNT)
+  {
+    pinState = HAL_GPIO_ReadPin(pinsConfig[relay_id].GPIOx, pinsConfig[relay_id].GPIO_Pin);
+    if(pinState == GPIO_PIN_SET)
+    {
+      ret = 1;
+    }
+    else
+    {
+      ret = 0;
+    }
+  }
+  else
+  {
+	ret = 0;
+  }
+
+
+  return ret;
+}
+
+
+uint8_t control::configurePin(uint8_t arg_id, ePinMode arg_mode, ePinPush arg_push)
 {
   GPIO_InitTypeDef GPIO_InitStruct;
 
   GPIO_InitStruct.Pin = pinsConfig[arg_id].GPIO_Pin;
-  GPIO_InitStruct.Mode = sPinModeConv[arg_mode];
-  GPIO_InitStruct.Pull = sPinPushConv[arg_push];
+  GPIO_InitStruct.Mode = pinModeConv[arg_mode];
+  GPIO_InitStruct.Pull = pinPushConv[arg_push];
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
   if(arg_id < PIN_COUNT)
@@ -59,7 +133,7 @@ uint8_t configurePin(uint8_t arg_id, ePinMode arg_mode, ePinPush arg_push)
   }
 }
 
-uint8_t controllPin(uint8_t arg_id, uint8_t arg_state)
+uint8_t control::controllPin(uint8_t arg_id, uint8_t arg_state)
 {
   uint8_t buffer[32] = {0};
   cString string((char*)buffer, 32);
@@ -68,7 +142,7 @@ uint8_t controllPin(uint8_t arg_id, uint8_t arg_state)
   {
     if(arg_state == 1)
     {
-      HAL_GPIO_WritePin(pinsConfig[arg_id].GPIOx , pinsConfig[arg_id].GPIO_Pin, GPIO_PIN_SET);
+      enableRelay(arg_id);
       string += "Channel ";
       string.addInt8_t((uint8_t)pinsConfig[arg_id].pinID, 10);
       //string += pinsConfig[arg_id].name;
@@ -76,7 +150,7 @@ uint8_t controllPin(uint8_t arg_id, uint8_t arg_state)
     }
     else
     {
-      HAL_GPIO_WritePin(pinsConfig[arg_id].GPIOx , pinsConfig[arg_id].GPIO_Pin, GPIO_PIN_RESET);
+      disableRelay(arg_id);
       string += "Channel ";
       string.addInt8_t((uint8_t)pinsConfig[arg_id].pinID, 10);
       //string += pinsConfig[arg_id].name;
@@ -92,22 +166,83 @@ uint8_t controllPin(uint8_t arg_id, uint8_t arg_state)
 
 }
 
-void reportPins(uint8_t arg_id)
+
+uint8_t control::controllPinSetBin(uint16_t tempNumber)
+{
+  int8_t relayNumber;
+  int8_t relayState;
+
+  for(relayNumber = 0; relayNumber <= 14; relayNumber++)
+  {
+	relayState = tempNumber & 0x0001;
+    if(relayState == 1)
+    {
+      enableRelay(relayNumber);
+    }
+    else
+    {
+      disableRelay(relayNumber);
+    }
+
+    tempNumber>>=1;
+  }
+
+  reportBin();
+}
+
+uint8_t control::controllPinEnableBin(uint16_t tempNumber)
+{
+  int8_t relayNumber;
+  int8_t relayState;
+
+  for(relayNumber = 0; relayNumber <= 14; relayNumber++)
+  {
+	relayState = tempNumber & 0x0001;
+    if(relayState == 1)
+    {
+      enableRelay(relayNumber);
+    }
+
+    tempNumber>>=1;
+  }
+
+  reportBin();
+}
+
+uint8_t control::controllPinDisableBin(uint16_t tempNumber)
+{
+  int8_t relayNumber;
+  int8_t relayState;
+
+
+  for(relayNumber = 0; relayNumber <= 14; relayNumber++)
+  {
+	relayState = tempNumber & 0x0001;
+    if(relayState == 0)
+    {
+      disableRelay(relayNumber);
+    }
+
+    tempNumber>>=1;
+  }
+
+  reportBin();
+}
+
+
+void control::reportPins(uint8_t arg_id)
 {
   uint8_t buffer[64] = {0};
   cString string((char*)buffer, 64);
-  GPIO_PinState pinState;
+  uint8_t pinState;
   uint8_t isFirst = 1;
-
-
 
   if(arg_id == 0xff)
   {
-
      for(uint8_t i=0; i<PIN_COUNT; i++)
      {
-         pinState = HAL_GPIO_ReadPin(pinsConfig[i].GPIOx , pinsConfig[i].GPIO_Pin);
-         if(pinState == GPIO_PIN_SET)
+    	 pinState = isRelayEnabled(i);
+         if(pinState == 1)
          {
              if(isFirst == 0)
              {
@@ -124,7 +259,7 @@ void reportPins(uint8_t arg_id)
 
      if(string.getSize() == 0)
      {
-        string += "all channels disabled";
+        string += "all channels disabled\n";
      }
      string += "\r";
   }
@@ -132,8 +267,8 @@ void reportPins(uint8_t arg_id)
   {
     if(arg_id < PIN_COUNT)
     {
-      pinState = HAL_GPIO_ReadPin(pinsConfig[arg_id < PIN_COUNT].GPIOx , pinsConfig[arg_id < PIN_COUNT].GPIO_Pin);
-      if(pinState == GPIO_PIN_SET)
+      pinState = isRelayEnabled(arg_id);
+      if(pinState == 1)
       {
         string += "Channel ";
         string.addInt8_t((uint8_t)arg_id, 10);
@@ -152,18 +287,19 @@ void reportPins(uint8_t arg_id)
 }
 
 
-void reportBin()
+void control::reportBin()
 {
   uint8_t buffer[32] = {0};
   cString string((char*)buffer, 32);
-  GPIO_PinState pinState;
+  uint8_t pinState;
+  uint8_t pinState2;
   uint8_t output = 0;
-
-
 
  for(uint8_t i=0; i<PIN_COUNT; i++)
  {
-   pinState = HAL_GPIO_ReadPin(pinsConfig[i].GPIOx , pinsConfig[i].GPIO_Pin);
+   //if(pinState == 1)
+   //pinState = HAL_GPIO_ReadPin(pinsConfig[i].GPIOx , pinsConfig[i].GPIO_Pin);
+   pinState = isRelayEnabled(i);
    if(pinState == GPIO_PIN_SET)
    {
      output |= 1 << i;
@@ -178,14 +314,14 @@ void reportBin()
   CDC_Transmit_FS(buffer, string.getSize());
 }
 
-void controlCyclic(void)
+void control::cyclic(void)
 {
   uint8_t dataBuff[64] = {0};
   uint8_t tempBuff[10] = {0};
   parseString<0> stringEx;
   uint8_t buffIndex = 0;
   uint8_t tempChar = 0;
-  uint8_t tempNumber = 0;
+  uint16_t tempNumber = 0;
 
   stringEx.Init((char*)dataBuff, 64);
 
@@ -221,14 +357,25 @@ void controlCyclic(void)
     }while(tempChar != '\r');
   }
 
+  if(stringEx.strcmpAndShift("Set 0x", strlen("Set 0x")) == 1)
+  {
+    tempChar = stringEx.findNext((const char[1]){'\r'}, 1);
+    tempNumber = stringEx.getUint('x', tempChar);
+    controllPinSetBin(tempNumber);
+  }
+
   if(stringEx.strcmpAndShift("Enable 0x", strlen("Enable 0x")) == 1)
   {
-
+	 tempChar = stringEx.findNext((const char[1]){'\r'}, 1);
+	 tempNumber = stringEx.getUint('x', tempChar);
+	 controllPinEnableBin(tempNumber);
   }
 
   if(stringEx.strcmpAndShift("Disable 0x", strlen("Disable 0x")) == 1)
   {
-
+	 tempChar = stringEx.findNext((const char[1]){'\r'}, 1);
+	 tempNumber = stringEx.getUint('x', tempChar);
+	 controllPinDisableBin(tempNumber);
   }
 
   if(stringEx.strcmpAndShift("Report\r", strlen("Report\r")) == 1)
@@ -312,11 +459,14 @@ void controlCyclic(void)
 
   if(stringEx.strcmpAndShift("Info\r", strlen("Info\r")) == 1)
   {
-    CDC_Transmit_FS((uint8_t*)"s.hamouz@gmail.com\r", strlen("s.hamouz@gmail.com\r"));
+    for(uint8_t i = 0; i<=1; i++)
+    {
+	  CDC_Transmit_FS((uint8_t*) infoArray[i], strlen(infoArray[i]));
+    }
+
   }
 
 
   stringEx.reset();
-
 
 }
